@@ -20,9 +20,10 @@ class SquadBot(commands.Bot):
 
 bot = SquadBot()
 
-# قاعدة بيانات مؤقتة بالذاكرة للـ Premium والإحصائيات
+# قاعدة بيانات مؤقتة بالذاكرة
 premium_guilds = set()
-coin_stats = {}  # {user_id: count}
+coin_stats = {} 
+voted_users = set()  # قائمة بالذين صوّتوا للبوت
 
 MAPS = ["Dust II", "Mirage", "Inferno", "Nuke", "Ancient", "Anubis"]
 
@@ -34,9 +35,10 @@ LANGUAGES = {
         'btn_captains': '👑 اختيار الكباتن',
         'btn_coin': '🪙 القرعة',
         'btn_move': '🚀 نقل الفرق تلقائياً (Premium)',
-        'btn_map': '🗺️ حظر واختيار الخرائط',
+        'btn_map': '🗺️ حظر وااختيار الخرائط',
         'btn_stats': '📊 إحصائيات القرعة',
         'btn_sub': '⭐ الاشتراك والتبرع',
+        'btn_vote': '🗳️ تصويت للبوت',
         'no_vc': '❌ يجب أن تكون في روم صوتي!',
         'no_players': '❌ نحتاج شخصين على الأقل بالروم!',
         'team_res': '🎮 نتائج الفرق',
@@ -45,7 +47,7 @@ LANGUAGES = {
         'empty': 'فارغ',
         'caps': '👑 الكباتن المعينين:',
         'coin_res': '🎲 النتيجة:',
-        'premium_needed': '🔒 هذه الميزة خاصة بسيرفرات **SquadSync Premium**!\nاشترك الآن لتفعيل النقل التلقائي للفرق بين الرومات الصوتية بضغطة زر واحدة.',
+        'premium_needed': '🔒 هذه الميزة خاصة بسيرفرات **SquadSync Premium** أو لمن صوّت للبوت على Top.gg!\nاشترك الآن أو صوّت للبوت لتفعيل النقل التلقائي.',
         'sub_title': '🌟 انضم إلى مجتمع SquadSync Premium!',
         'sub_desc': 'احصل على تجربة لعب احترافية وبدون حدود مع ميزات حصرية:\n\n'
                    '✨ **المميزات المضافة للاشتراك:**\n'
@@ -67,6 +69,7 @@ LANGUAGES = {
         'btn_map': '🗺️ Map Ban / Pick',
         'btn_stats': '📊 Coin Stats',
         'btn_sub': '⭐ Premium & Donate',
+        'btn_vote': '🗳️ Vote Bot',
         'no_vc': '❌ You must be in a voice channel!',
         'no_players': '❌ Need at least 2 players in VC!',
         'team_res': '🎮 Team Results',
@@ -75,7 +78,7 @@ LANGUAGES = {
         'empty': 'Empty',
         'caps': '👑 Selected Captains:',
         'coin_res': '🎲 Result:',
-        'premium_needed': '🔒 This feature is for **SquadSync Premium** servers!\nUpgrade now to automatically move teams into separate voice channels with one click.',
+        'premium_needed': '🔒 This feature is for **SquadSync Premium** servers or active voters!\nUpgrade or vote on Top.gg to automatically move teams.',
         'sub_title': '🌟 Upgrade to SquadSync Premium!',
         'sub_desc': 'Take your gaming community to the next level with exclusive tools:\n\n'
                    '✨ **Premium Perks:**\n'
@@ -165,7 +168,7 @@ class SquadView(discord.ui.View):
         await interaction.response.send_message(f"{lang['coin_res']} **{res}**")
 
     async def auto_move(self, interaction: discord.Interaction, lang):
-        if interaction.guild_id not in premium_guilds:
+        if interaction.guild_id not in premium_guilds and interaction.user.id not in voted_users:
             await interaction.response.send_message(lang['premium_needed'], ephemeral=True)
             return
         await interaction.response.send_message("🚀 جاري توزيع الأعضاء بين الرومات الصوتية الفرعية...", ephemeral=True)
@@ -185,7 +188,6 @@ class SquadView(discord.ui.View):
             color=discord.Color.purple()
         )
         sub_view = discord.ui.View()
-        # استبدل الروابط أدناه بروابط Patreon أو BuyMeACoffee أو متجر ديسكورد
         sub_view.add_item(discord.ui.Button(label=lang['btn_pay'], style=discord.ButtonStyle.link, url="https://patreon.com"))
         sub_view.add_item(discord.ui.Button(label=lang['btn_donate'], style=discord.ButtonStyle.link, url="https://buymeacoffee.com"))
         
@@ -204,5 +206,18 @@ async def squad(interaction: discord.Interaction):
         color=discord.Color.gold()
     )
     await interaction.response.send_message(embed=embed, view=SquadView(user_lang))
+
+@bot.tree.command(name="vote", description="Vote for SquadSync on Top.gg")
+async def vote(interaction: discord.Interaction):
+    user_lang = fetch_lang(interaction.locale)
+    view = discord.ui.View()
+    # استبدل هذا الرابط برابط صفحة بوتك في Top.gg بعد إنشائها
+    view.add_item(discord.ui.Button(label=user_lang['btn_vote'], style=discord.ButtonStyle.link, url="https://top.gg"))
+    
+    await interaction.response.send_message(
+        "🗳️ **صوّت لـ SquadSync وافتح ميزات الـ Premium مجاناً لمدة 12 ساعة!**",
+        view=view,
+        ephemeral=True
+    )
 
 bot.run(os.getenv("DISCORD_TOKEN"))
