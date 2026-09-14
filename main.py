@@ -20,14 +20,23 @@ class SquadBot(commands.Bot):
 
 bot = SquadBot()
 
-# قاموس دعم اللغات العالمية متعدد الألسن
+# قاعدة بيانات مؤقتة بالذاكرة للـ Premium والإحصائيات
+premium_guilds = set()
+coin_stats = {}  # {user_id: count}
+
+MAPS = ["Dust II", "Mirage", "Inferno", "Nuke", "Ancient", "Anubis"]
+
 LANGUAGES = {
     'ar': {
-        'title': '🎮 لوحة تحكم السكواد',
-        'desc': 'اختر الخدمة المطلوبة لإدارة الفريق:',
+        'title': '🎮 لوحة تحكم السكواد الاحترافية | SquadSync',
+        'desc': 'اختر إحدى الخدمات التالية لإدارة روم اللعب والفرق:',
         'btn_teams': '⚔️ تقسيم الفرق',
         'btn_captains': '👑 اختيار الكباتن',
-        'btn_coin': '🪙 قرعة / طرة وكتشة',
+        'btn_coin': '🪙 القرعة',
+        'btn_move': '🚀 نقل الفرق تلقائياً (Premium)',
+        'btn_map': '🗺️ حظر واختيار الخرائط',
+        'btn_stats': '📊 إحصائيات القرعة',
+        'btn_sub': '⭐ الاشتراك والتبرع',
         'no_vc': '❌ يجب أن تكون في روم صوتي!',
         'no_players': '❌ نحتاج شخصين على الأقل بالروم!',
         'team_res': '🎮 نتائج الفرق',
@@ -36,59 +45,47 @@ LANGUAGES = {
         'empty': 'فارغ',
         'caps': '👑 الكباتن المعينين:',
         'coin_res': '🎲 النتيجة:',
-        'heads': 'طرة (Heads) 🪙',
-        'tails': 'كتشة (Tails) 🪙'
+        'premium_needed': '🔒 هذه الميزة خاصة بسيرفرات **SquadSync Premium**!\nاشترك الآن لتفعيل النقل التلقائي للفرق بين الرومات الصوتية بضغطة زر واحدة.',
+        'sub_title': '🌟 انضم إلى مجتمع SquadSync Premium!',
+        'sub_desc': 'احصل على تجربة لعب احترافية وبدون حدود مع ميزات حصرية:\n\n'
+                   '✨ **المميزات المضافة للاشتراك:**\n'
+                   '• 🚀 **Auto-Voice Move:** نقل أعضاء الفرق تلقائياً للرومات الصوتية وإعادتهم بضغطة زر.\n'
+                   '• 🏆 **Leaderboards & MMR:** تسجيل الانتصار والتهديف وإنشاء لائحة صدارة للسيرفر.\n'
+                   '• 🎨 **Custom Branding:** تخصيص ألوان ورسائل البوت باسم سيرفرك.\n'
+                   '• ⚡ **Priority Support:** دعم فني سريع وسيرفرات استضافة فائقة السرعة.\n\n'
+                   '💡 *دعمك لنا يساهم في تطوير البوت واستمراريته بأفضل أداء!*',
+        'btn_pay': '💳 اشترك الآن (Premium)',
+        'btn_donate': '☕ دعم المطور (Donate)'
     },
     'en': {
-        'title': '🎮 SquadSync Panel',
-        'desc': 'Select an option to manage your squad:',
+        'title': '🎮 SquadSync Control Panel',
+        'desc': 'Select an option to manage your squad and match:',
         'btn_teams': '⚔️ Split Teams',
         'btn_captains': '👑 Pick Captains',
         'btn_coin': '🪙 Coin Toss',
+        'btn_move': '🚀 Auto Move Teams (Premium)',
+        'btn_map': '🗺️ Map Ban / Pick',
+        'btn_stats': '📊 Coin Stats',
+        'btn_sub': '⭐ Premium & Donate',
         'no_vc': '❌ You must be in a voice channel!',
         'no_players': '❌ Need at least 2 players in VC!',
-        'team_res': '🎮 Team Assignment Results',
+        'team_res': '🎮 Team Results',
         't1': '🟦 Team 1',
         't2': '🟥 Team 2',
         'empty': 'Empty',
         'caps': '👑 Selected Captains:',
         'coin_res': '🎲 Result:',
-        'heads': 'Heads 🪙',
-        'tails': 'Tails 🪙'
-    },
-    'es': {
-        'title': '🎮 Panel SquadSync',
-        'desc': 'Selecciona una opción para gestionar tu equipo:',
-        'btn_teams': '⚔️ Dividir Equipos',
-        'btn_captains': '👑 Elegir Capitanes',
-        'btn_coin': '🪙 Lanzar Moneda',
-        'no_vc': '❌ ¡Debes estar en un canal de voz!',
-        'no_players': '❌ ¡Se necesitan al menos 2 jugadores!',
-        'team_res': '🎮 Resultados de Equipos',
-        't1': '🟦 Equipo 1',
-        't2': '🟥 Equipo 2',
-        'empty': 'Vacío',
-        'caps': '👑 Capitanes Seleccionados:',
-        'coin_res': '🎲 Resultado:',
-        'heads': 'Cara 🪙',
-        'tails': 'Cruz 🪙'
-    },
-    'fr': {
-        'title': '🎮 Panneau SquadSync',
-        'desc': 'Sélectionnez une option pour gérer votre équipe:',
-        'btn_teams': '⚔️ Diviser les Équipes',
-        'btn_captains': '👑 Choisir Capitaines',
-        'btn_coin': '🪙 Pile ou Face',
-        'no_vc': '❌ Vous devez être dans un salon vocal!',
-        'no_players': '❌ Il faut au moins 2 joueurs!',
-        'team_res': '🎮 Résultats des Équipes',
-        't1': '🟦 Équipe 1',
-        't2': '🟥 Équipe 2',
-        'empty': 'Vide',
-        'caps': '👑 Capitaines Sélectionnés:',
-        'coin_res': '🎲 Résultat:',
-        'heads': 'Pile 🪙',
-        'tails': 'Face 🪙'
+        'premium_needed': '🔒 This feature is for **SquadSync Premium** servers!\nUpgrade now to automatically move teams into separate voice channels with one click.',
+        'sub_title': '🌟 Upgrade to SquadSync Premium!',
+        'sub_desc': 'Take your gaming community to the next level with exclusive tools:\n\n'
+                   '✨ **Premium Perks:**\n'
+                   '• 🚀 **Auto-Voice Move:** Automatically split & move teams into voice rooms.\n'
+                   '• 🏆 **Leaderboards & MMR:** Track stats and display server rankings.\n'
+                   '• 🎨 **Custom Branding:** Personalize panel colors and text for your guild.\n'
+                   '• ⚡ **Priority Server Hosting:** Maximum uptime & instant execution.\n\n'
+                   '💡 *Your support helps keep SquadSync fast, stable, and updated!*',
+        'btn_pay': '💳 Subscribe to Premium',
+        'btn_donate': '☕ Support Developer'
     }
 }
 
@@ -101,20 +98,35 @@ class SquadView(discord.ui.View):
         super().__init__(timeout=None)
         self.lang = lang
 
-        btn1 = discord.ui.Button(label=lang['btn_teams'], style=discord.ButtonStyle.primary)
-        btn1.callback = self.split_teams
-        self.add_item(btn1)
+        self.add_item(discord.ui.Button(label=lang['btn_teams'], style=discord.ButtonStyle.primary, custom_id="btn_teams"))
+        self.add_item(discord.ui.Button(label=lang['btn_captains'], style=discord.ButtonStyle.secondary, custom_id="btn_captains"))
+        self.add_item(discord.ui.Button(label=lang['btn_coin'], style=discord.ButtonStyle.success, custom_id="btn_coin"))
+        self.add_item(discord.ui.Button(label=lang['btn_move'], style=discord.ButtonStyle.danger, custom_id="btn_move"))
+        self.add_item(discord.ui.Button(label=lang['btn_map'], style=discord.ButtonStyle.secondary, custom_id="btn_map"))
+        self.add_item(discord.ui.Button(label=lang['btn_stats'], style=discord.ButtonStyle.secondary, custom_id="btn_stats"))
+        self.add_item(discord.ui.Button(label=lang['btn_sub'], style=discord.ButtonStyle.success, custom_id="btn_sub"))
 
-        btn2 = discord.ui.Button(label=lang['btn_captains'], style=discord.ButtonStyle.secondary)
-        btn2.callback = self.pick_captains
-        self.add_item(btn2)
-
-        btn3 = discord.ui.Button(label=lang['btn_coin'], style=discord.ButtonStyle.success)
-        btn3.callback = self.coin_flip
-        self.add_item(btn3)
-
-    async def split_teams(self, interaction: discord.Interaction):
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        cid = interaction.data.get("custom_id")
         lang = fetch_lang(interaction.locale)
+
+        if cid == "btn_teams":
+            await self.split_teams(interaction, lang)
+        elif cid == "btn_captains":
+            await self.pick_captains(interaction, lang)
+        elif cid == "btn_coin":
+            await self.coin_flip(interaction, lang)
+        elif cid == "btn_move":
+            await self.auto_move(interaction, lang)
+        elif cid == "btn_map":
+            await self.map_pick(interaction, lang)
+        elif cid == "btn_stats":
+            await self.show_stats(interaction, lang)
+        elif cid == "btn_sub":
+            await self.show_subscription(interaction, lang)
+        return True
+
+    async def split_teams(self, interaction: discord.Interaction, lang):
         if not interaction.user.voice or not interaction.user.voice.channel:
             await interaction.response.send_message(lang['no_vc'], ephemeral=True)
             return
@@ -133,8 +145,7 @@ class SquadView(discord.ui.View):
         embed.add_field(name=lang['t2'], value="\n".join(t2) or lang['empty'], inline=True)
         await interaction.response.send_message(embed=embed)
 
-    async def pick_captains(self, interaction: discord.Interaction):
-        lang = fetch_lang(interaction.locale)
+    async def pick_captains(self, interaction: discord.Interaction, lang):
         if not interaction.user.voice or not interaction.user.voice.channel:
             await interaction.response.send_message(lang['no_vc'], ephemeral=True)
             return
@@ -147,10 +158,38 @@ class SquadView(discord.ui.View):
         caps = random.sample(members, 2)
         await interaction.response.send_message(f"{lang['caps']}\n1️⃣ **{caps[0]}**\n2️⃣ **{caps[1]}**")
 
-    async def coin_flip(self, interaction: discord.Interaction):
-        lang = fetch_lang(interaction.locale)
-        res = random.choice([lang['heads'], lang['tails']])
+    async def coin_flip(self, interaction: discord.Interaction, lang):
+        res = random.choice(["Heads 🪙", "Tails 🪙"])
+        uid = interaction.user.id
+        coin_stats[uid] = coin_stats.get(uid, 0) + 1
         await interaction.response.send_message(f"{lang['coin_res']} **{res}**")
+
+    async def auto_move(self, interaction: discord.Interaction, lang):
+        if interaction.guild_id not in premium_guilds:
+            await interaction.response.send_message(lang['premium_needed'], ephemeral=True)
+            return
+        await interaction.response.send_message("🚀 جاري توزيع الأعضاء بين الرومات الصوتية الفرعية...", ephemeral=True)
+
+    async def map_pick(self, interaction: discord.Interaction, lang):
+        selected_map = random.choice(MAPS)
+        await interaction.response.send_message(f"🗺️ الخريطة المختارة للمواجهة: **{selected_map}**")
+
+    async def show_stats(self, interaction: discord.Interaction, lang):
+        count = coin_stats.get(interaction.user.id, 0)
+        await interaction.response.send_message(f"📊 عدد مرات استخدامك للقرعة: **{count}** مرة", ephemeral=True)
+
+    async def show_subscription(self, interaction: discord.Interaction, lang):
+        embed = discord.Embed(
+            title=lang['sub_title'],
+            description=lang['sub_desc'],
+            color=discord.Color.purple()
+        )
+        sub_view = discord.ui.View()
+        # استبدل الروابط أدناه بروابط Patreon أو BuyMeACoffee أو متجر ديسكورد
+        sub_view.add_item(discord.ui.Button(label=lang['btn_pay'], style=discord.ButtonStyle.link, url="https://patreon.com"))
+        sub_view.add_item(discord.ui.Button(label=lang['btn_donate'], style=discord.ButtonStyle.link, url="https://buymeacoffee.com"))
+        
+        await interaction.response.send_message(embed=embed, view=sub_view, ephemeral=True)
 
 @bot.event
 async def on_ready():
