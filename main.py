@@ -1,24 +1,29 @@
+import os
 import discord
 from discord.ext import commands
-import os
 
-# إعداد الصلاحيات الأساسية للبوت
 intents = discord.Intents.default()
 intents.message_content = True
-intents.members = True
 
-bot = commands.Bot(command_prefix="/", intents=intents)
+class SquadBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix="!", intents=intents)
 
-# حدث التشغيل: من يشتغل البوت
+    async def setup_hook(self):
+        try:
+            synced = await self.tree.sync()
+            print(f"Synced {len(synced)} commands successfully.")
+        except Exception as e:
+            print(f"Failed to sync commands: {e}")
+
+bot = SquadBot()
+
 @bot.event
 async def on_ready():
-    print(f"تم تسجيل الدخول بنجاح! البوت جاهز للعمل باسم: {bot.user}")
+    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
-# أول أمر تجريبي (Command): تجميع الشباب
-@bot.command(name="squad")
-async def squad(ctx, game_name: str, time: str):
-    await ctx.send(f"🎮 **تنبيه سكواد جديد!**\nاللاعب {ctx.author.mention} ديجمع فريق لعبة: **{game_name}**\n⏰ وقت التجمع: **{time}**\nمنو جاهز؟ تفاعلوا بالرسالة!")
+@bot.tree.command(name="squad", description="Manage and coordinate your game squad")
+async def squad(interaction: discord.Interaction):
+    await interaction.response.send_message("Hello! Squad command received successfully 🎮🔥")
 
-# تشغيل البوت باستخدام الـ Token (من متغيرات البيئة أو بشكل مباشر)
-TOKEN = os.getenv("DISCORD_TOKEN") or "YOUR_BOT_TOKEN"
-bot.run(TOKEN)
+bot.run(os.getenv("DISCORD_TOKEN"))
